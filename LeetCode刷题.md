@@ -87,7 +87,7 @@ class Solution {
 
 #### 解法三：哈希表优化
 
-解法二用到的是两个for循环，可以只用一个for循环解决这道题。
+解法二用到的是两个for循环，可以只用一个for循环解决这道题。可以避免重复元素的判断，因为是先搜索再添加，保证找到的元素一定不是自己本身。
 
 ```java
 class Solution {
@@ -145,11 +145,11 @@ class Solution {
 
 链接：https://leetcode-cn.com/problems/add-two-numbers
 
-#### 解法：双指针
+#### 解法一：双指针迭代
 
 思路：
 
-两条链表同一位置元素相加，如有进位则将jinWei标记为1。
+用两个指针指向两条链表同一位置元素，将它们相加，如有进位则将jinWei标记为1。
 
 如此遍历直到两条链表尾且jinWei为0。
 
@@ -168,6 +168,7 @@ class Solution {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
         int jinWei = 0;
         ListNode head = null, p = null;
+        //三个条件联合判断
         while(l1 != null || l2 != null || jinWei != 0) {
             int num = 0;
             if(l1 != null) {
@@ -192,6 +193,32 @@ class Solution {
                 jinWei = 0;
             }
         } 
+        return head;           
+    }
+}
+```
+
+#### 解法二：双指针递归
+
+和上面的思路是一样的，只不过把迭代改成了递归。
+
+```java
+class Solution {
+    int jinWei = 0;
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        if(l1 == null && l2 == null && jinWei == 0) return null;
+        int sum = 0;
+        if(l1 != null) sum += l1.val;
+        if(l2 != null) sum += l2.val;
+        sum += jinWei;
+        if(sum >= 10) {
+            jinWei = 1;
+            sum = sum%10;
+        }else {
+            jinWei = 0;
+        }
+        ListNode head = new ListNode(sum);
+        head.next = addTwoNumbers(l1 != null ? l1.next : null, l2 != null ? l2.next : null);
         return head;           
     }
 }
@@ -243,7 +270,23 @@ class Solution {
 很容易想到用哈希表记录字符和其对应的位置。
 
 ```java
-class Solution {    public int lengthOfLongestSubstring(String s) {        int ans = 0;        int start = 0; //从哪里开始截断重新开始计数        if(s.length() == 0) return ans;        HashMap<Character,Integer> hm = new HashMap<>();        for(int i = 0; i < s.length(); i++) {            char now = s.charAt(i);            if(hm.containsKey(now)) {                start = Math.max(start,hm.get(now)+1);            }            hm.put(now,i);            ans = Math.max(ans,i-start+1);        }        return ans;    }}
+class Solution {    
+    public int lengthOfLongestSubstring(String s) {        
+        int ans = 0;        
+        int start = 0; //从哪里开始截断重新开始计数        
+        if(s.length() == 0) return ans;        
+        HashMap<Character,Integer> hm = new HashMap<>();        
+        for(int i = 0; i < s.length(); i++) {            
+            char now = s.charAt(i);            
+            if(hm.containsKey(now)) {                
+                start = Math.max(start,hm.get(now)+1);            
+            }            
+            hm.put(now,i);            
+            ans = Math.max(ans,i-start+1);        
+        }        
+        return ans;    
+    }
+}
 ```
 
 时间复杂度：O（n）
@@ -383,7 +426,26 @@ class Solution {
 题目要求的时间复杂度是O（log（m+n）），很自然会联想到二分查找法。其实就是在解法一的基础上运用了二分查找法来筛查到第K小的数。
 
 ```java
-class Solution {    public double findMedianSortedArrays(int[] nums1, int[] nums2) {        int m = nums1.length, n = nums2.length;        if((m+n)%2 == 1) return getK(nums1,0,nums2,0,(m+n+1)/2);        return ((double)getK(nums1,0,nums2,0,(m+n+1)/2) + (double)getK(nums1,0,nums2,0,(m+n+2)/2))/2;    }    private int getK(int[] nums1, int start1, int[] nums2, int start2, int k) {        if(start1 == nums1.length) return nums2[start2 + k - 1];        if(start2 == nums2.length) return nums1[start1 + k - 1];        if(k == 1) return nums1[start1] <= nums2[start2] ? nums1[start1] : nums2[start2];        //防止数组越界        int len1 = Math.min(start1 + k/2 - 1, nums1.length - 1);        int len2 = Math.min(start2 + k/2 - 1, nums2.length - 1);        if(nums1[len1] <= nums2[len2]) {            //舍弃掉nums1[len1]及之前的所有数，从len1+1位置开始搜寻            //剩下的所有数中要找寻第k-(len1-start1+1)小的数            return getK(nums1, len1 + 1, nums2, start2, k-(len1-start1+1));        }        return getK(nums1, start1, nums2, len2 + 1, k-(len2-start2+1));    }}
+class Solution {    
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {        
+        int m = nums1.length, n = nums2.length;        
+        if((m+n)%2 == 1) return getK(nums1,0,nums2,0,(m+n+1)/2);        
+        return ((double)getK(nums1,0,nums2,0,(m+n+1)/2) + (double)getK(nums1,0,nums2,0,(m+n+2)/2))/2;    
+    }    
+    private int getK(int[] nums1, int start1, int[] nums2, int start2, int k) {        
+        if(start1 == nums1.length) return nums2[start2 + k - 1];        
+        if(start2 == nums2.length) return nums1[start1 + k - 1];        
+        if(k == 1) return nums1[start1] <= nums2[start2] ? nums1[start1] : nums2[start2];        //防止数组越界        
+        int len1 = Math.min(start1 + k/2 - 1, nums1.length - 1);        
+        int len2 = Math.min(start2 + k/2 - 1, nums2.length - 1);        
+        if(nums1[len1] <= nums2[len2]) {            
+            //舍弃掉nums1[len1]及之前的所有数，从len1+1位置开始搜寻            
+            //剩下的所有数中要找寻第k-(len1-start1+1)小的数            
+            return getK(nums1, len1 + 1, nums2, start2, k-(len1-start1+1));        
+        }        
+        return getK(nums1, start1, nums2, len2 + 1, k-(len2-start2+1));    
+    }
+}
 ```
 
 ### 5. 最长回文子串
@@ -424,7 +486,36 @@ class Solution {    public double findMedianSortedArrays(int[] nums1, int[] nums
 暴力求解，列举所有的子串，判断是否为回文串。
 
 ```java
-class Solution {    public String longestPalindrome(String s) {        if(s.length() == 1) return s;        char[] array = s.toCharArray();        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1        int left = 0, right = 0;        for(int i = 0; i < array.length - longest; i++) {            //一点简单的剪枝操作            for(int j = i+longest; j < array.length; j++) {                if(isPalindrome(array, i, j)) {                    longest = j - i + 1;                    left = i;                    right = j;                }            }        }        return s.substring(left,right+1);    }    private boolean isPalindrome(char[] array, int left, int right) {        while(left < right) {            if(array[left] == array[right]) {                left++;                right--;            }else {                return false;            }        }        return true;    }}
+class Solution {    
+    public String longestPalindrome(String s) {        
+        if(s.length() == 1) return s;        
+        char[] array = s.toCharArray();        
+        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1        
+        int left = 0, right = 0;        
+        for(int i = 0; i < array.length - longest; i++) {            
+            //一点简单的剪枝操作            
+            for(int j = i+longest; j < array.length; j++) {                
+                if(isPalindrome(array, i, j)) {                    
+                    longest = j - i + 1;                    
+                    left = i;                    
+                    right = j;                
+                }            
+            }        
+        }        
+        return s.substring(left,right+1);    
+    }    
+    private boolean isPalindrome(char[] array, int left, int right) {        
+        while(left < right) {            
+            if(array[left] == array[right]) {                
+                left++;               
+                right--;            
+            }else {                
+                return false;            
+            }       
+        }        
+        return true;    
+    }
+}
 ```
 
 时间复杂度：两层 for 循环 O（n²），for 循环里边判断是否为回文，O（n），所以时间复杂度为 O（n³）。
@@ -436,7 +527,29 @@ class Solution {    public String longestPalindrome(String s) {        if(s.leng
 用一个二维布尔数组isP[i] [j] 表示从位置i到j是否为回文串，如果i位置和j位置的字符相同，且isP[i+1] [j-1]为真，那么可以得出isP[i] [j]为真。
 
 ```java
-class Solution{    public String longestPalindrome(String s) {        if(s.length() == 1) return s;        int length = s.length();        boolean[][] isP = new boolean[length][length];        char[] chars = s.toCharArray();        int left = 0, right = 0;        for(int i = 0; i < length; i++) {            isP[i][i] = true;        }        for(int len = 2; len <= length; len++) {            for(int start = 0; start <= length - len; start++){                int end = start + len - 1;                isP[start][end] = (chars[start] == chars[end]) && (len == 2 || isP[start+1][end-1]);                if(isP[start][end]) {                    left = start;                    right = end;                }            }        }        return s.substring(left,right+1);    }}
+class Solution{    
+    public String longestPalindrome(String s) {        
+        if(s.length() == 1) return s;        
+        int length = s.length();        
+        boolean[][] isP = new boolean[length][length];        
+        char[] chars = s.toCharArray();       
+        int left = 0, right = 0;       
+        for(int i = 0; i < length; i++) {        
+            isP[i][i] = true;       
+        }        
+        for(int len = 2; len <= length; len++) {           
+            for(int start = 0; start <= length - len; start++){              
+                int end = start + len - 1;                
+                isP[start][end] = (chars[start] == chars[end]) && (len == 2 || isP[start+1][end-1]);
+                if(isP[start][end]) {                    
+                    left = start;                    
+                    right = end;              
+                }          
+            }       
+        }      
+        return s.substring(left,right+1);    
+    }
+}
 ```
 
 时间复杂度：两层循环，O（n²）。
@@ -446,7 +559,26 @@ class Solution{    public String longestPalindrome(String s) {        if(s.lengt
 这里的空间复杂度还可以优化，可以尝试用一维数组来表示isP[j]表示。由于isP[i] [j]是从isP[i+1] [j-1]得到的，所以知道以i为起始的isP必须要先得到i+1的isP。遍历顺序应当是倒序。
 
 ```java
-class Solution{    public String longestPalindrome(String s) {        if(s.length() == 1) return s;        int length = s.length();        boolean[] isP = new boolean[length];        char[] chars = s.toCharArray();        int left = 0, right = 0, longest = 1;        for(int i = length - 1; i >= 0; i--) {            for(int j = length - 1; j >= i; j--){                isP[j] = (chars[i] == chars[j]) && (j - i <= 2 || isP[j-1]);                if(isP[j] && j - i + 1 > longest) {                    left = i;                    right = j;                    longest = j - i + 1;                }            }        }        return s.substring(left,right+1);    }}
+class Solution{    
+    public String longestPalindrome(String s) {     
+        if(s.length() == 1) return s;   
+        int length = s.length();   
+        boolean[] isP = new boolean[length];    
+        char[] chars = s.toCharArray();     
+        int left = 0, right = 0, longest = 1;   
+        for(int i = length - 1; i >= 0; i--) {   
+            for(int j = length - 1; j >= i; j--){            
+                isP[j] = (chars[i] == chars[j]) && (j - i <= 2 || isP[j-1]);        
+                if(isP[j] && j - i + 1 > longest) {           
+                    left = i;                
+                    right = j;               
+                    longest = j - i + 1;        
+                }         
+            }    
+        }      
+        return s.substring(left,right+1);   
+    }
+}
 ```
 
 时间复杂度：两层循环，O（n²）。
@@ -458,7 +590,29 @@ class Solution{    public String longestPalindrome(String s) {        if(s.lengt
 以中间为搜寻起点，如果是回文子串则向两边散开。
 
 ```java
-class Solution {    public String longestPalindrome(String s) {        if(s.length() == 1) return s;        char[] array = s.toCharArray();        int[] memo = {0,0,0};//保存最长回文长度，左边界索引，右边界索引        for(int i = 1; i < array.length - memo[0]/2; i++) {            countPalindrome(array, i, i, memo);            countPalindrome(array, i-1, i, memo);        }        return s.substring(memo[1],memo[2]+1);    }    private void countPalindrome(char[] a, int left, int right, int[] memo) {        while(left >= 0 && right < a.length && a[left] == a[right]) {            left--;            right++;        }        if(right - left - 1 > memo[0]) {            memo[0] = right - left - 1;            memo[1] = left + 1;            memo[2] = right - 1;        }    }}
+class Solution {   
+    public String longestPalindrome(String s) {       
+        if(s.length() == 1) return s;  
+        char[] array = s.toCharArray();    
+        int[] memo = {0,0,0};//保存最长回文长度，左边界索引，右边界索引      
+        for(int i = 1; i < array.length - memo[0]/2; i++) {      
+            countPalindrome(array, i, i, memo);       
+            countPalindrome(array, i-1, i, memo);    
+        }      
+        return s.substring(memo[1],memo[2]+1);  
+    }  
+    private void countPalindrome(char[] a, int left, int right, int[] memo) {      
+        while(left >= 0 && right < a.length && a[left] == a[right]) {        
+            left--;        
+            right++;      
+        }      
+        if(right - left - 1 > memo[0]) {       
+            memo[0] = right - left - 1;        
+            memo[1] = left + 1;       
+            memo[2] = right - 1;     
+        }   
+    }
+}
 ```
 
 时间复杂度：一层 for 循环 O（n），for 循环里边判断是否为回文，O（n），所以时间复杂度为 O（n²）。
@@ -472,7 +626,33 @@ class Solution {    public String longestPalindrome(String s) {        if(s.leng
 把两个字符串分别以行和列组成一个二维矩阵，如果字符串1的i位置和字符串2的j位置相等，那么就用dp[i] [j]=1 +dp[i-1] [j-1]更新。
 
 ```java
-class Solution {    public String longestPalindrome(String s) {        if(s.length() == 1) return s;        char[] array = s.toCharArray();        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1        int left = 0, right = 0;        int[][] dp = new int[array.length][array.length];        //以逆序数组为行，正序数组为列        for(int i = 0; i < array.length; i++) {            for(int j = 0; j < array.length; j++) {                if(array[j] == array[array.length - 1 - i]) {                    dp[i][j] = ((i > 0 && j > 0) ? dp[i-1][j-1] : 0) + 1;                    if(dp[i][j] > longest) {                        if(j - dp[i][j] + 1 == array.length - 1 - i) {                            //确认一下下标无误，即正序开始时的下标等于array.length - 1减去逆序位置i                            //如果不加这一步确认那么遇到例如"aacabdkacaa"时，会出现dp[3][3]最大，left=7，right = 3                            longest = dp[i][j];                            right = j;                            left = array.length - 1 - i;                        }                                            }                }            }        }        return s.substring(left,right+1);    }}
+class Solution {  
+    public String longestPalindrome(String s) {      
+        if(s.length() == 1) return s;      
+        char[] array = s.toCharArray();   
+        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1       
+        int left = 0, right = 0;       
+        int[][] dp = new int[array.length][array.length];       
+        //以逆序数组为行，正序数组为列        
+        for(int i = 0; i < array.length; i++) {    
+            for(int j = 0; j < array.length; j++) {             
+                if(array[j] == array[array.length - 1 - i]) {          
+                    dp[i][j] = ((i > 0 && j > 0) ? dp[i-1][j-1] : 0) + 1;              
+                    if(dp[i][j] > longest) {               
+                        if(j - dp[i][j] + 1 == array.length - 1 - i) {            
+                            //确认一下下标无误，即正序开始时的下标等于array.length - 1减去逆序位置i   
+                            //如果不加这一步确认那么遇到例如"aacabdkacaa"时，会出现dp[3][3]最大，left=7，right = 3  
+                            longest = dp[i][j];                         
+                            right = j;                        
+                            left = array.length - 1 - i;    
+                        }               
+                    }           
+                }        
+            }      
+        }       
+        return s.substring(left,right+1);    
+    }
+}
 ```
 
 时间复杂度：两层循环，O（n²）。但是不如中心扩展效率好，因为中心扩展法有剪枝操作，而利用动态规划无法这么做。
@@ -482,7 +662,36 @@ class Solution {    public String longestPalindrome(String s) {        if(s.leng
 可以只用一维数组来优化空间复杂度。
 
 ```java
-class Solution {    public String longestPalindrome(String s) {        int length = s.length();        if(length == 1) return s;                char[] array = s.toCharArray();        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1        int left = 0, right = 0;        int[] dp = new int[length];        //以逆序数组为行，正序数组为列        for(int i = 0; i < length; i++) {            for(int j = length - 1; j >= 0; j--) {                if(array[j] == array[array.length - 1 - i]) {                    dp[j] = ((j > 0) ? dp[j-1] : 0) + 1;                    if(dp[j] > longest) {                        if(j - dp[j] + 1 == array.length - 1 - i) {                            //确认一下下标无误，即正序开始时的下标等于array.length - 1减去逆序位置                            longest = dp[j];                            right = j;                            left = array.length - 1 - i;                        }                                            }                }else {                    //之前二维数组，每次用的是不同的列，所以不用置 0 。                    dp[j] = 0;                }            }        }        return s.substring(left,right+1);    }}
+class Solution {    
+    public String longestPalindrome(String s) {    
+        int length = s.length();     
+        if(length == 1) return s;           
+        char[] array = s.toCharArray();   
+        int longest = 1;//因为每单个字符一定是回文串，所以可以确定的是最长的回文串一定大于等于1     
+        int left = 0, right = 0;     
+        int[] dp = new int[length];     
+        //以逆序数组为行，正序数组为列     
+        for(int i = 0; i < length; i++) {          
+            for(int j = length - 1; j >= 0; j--) {        
+                if(array[j] == array[array.length - 1 - i]) {    
+                    dp[j] = ((j > 0) ? dp[j-1] : 0) + 1;          
+                    if(dp[j] > longest) {                    
+                        if(j - dp[j] + 1 == array.length - 1 - i) {           
+                            //确认一下下标无误，即正序开始时的下标等于array.length - 1减去逆序位置     
+                            longest = dp[j];                     
+                            right = j;               
+                            left = array.length - 1 - i;    
+                        }                                
+                    }             
+                }else {             
+                    //之前二维数组，每次用的是不同的列，所以不用置 0 。        
+                    dp[j] = 0;         
+                }       
+            }
+        }
+        return s.substring(left,right+1);   
+    }
+}
 ```
 
 ### 6. Z 字形变换
@@ -545,7 +754,33 @@ P     I
 ![](http://windliang.oss-cn-beijing.aliyuncs.com/6_3.jpg)
 
 ```java
-class Solution {    public String convert(String s, int numRows) {        if(numRows == 1 || s.length() <= numRows) return s;        char[] chars = s.toCharArray();        int row = 0;        StringBuilder sb = new StringBuilder();        while(row < numRows) {            int pos = row;            //当step1和step2为0时要特殊处理            int step1 = (numRows - row - 1) * 2 == 0 ? row * 2 : (numRows - row - 1) * 2;            int step2 = row * 2 == 0 ? step1 : row * 2;            boolean isS1 = true;            while(pos < chars.length) {                sb.append(chars[pos]);                if(isS1){                    pos += step1;                    isS1 = false;                }else {                    pos += step2;                    isS1 = true;                }            }            row++;        }        return sb.toString();    }}
+class Solution {   
+    public String convert(String s, int numRows) {      
+        if(numRows == 1 || s.length() <= numRows) return s;      
+        char[] chars = s.toCharArray();      
+        int row = 0;       
+        StringBuilder sb = new StringBuilder();     
+        while(row < numRows) {            
+            int pos = row;        
+            //当step1和step2为0时要特殊处理         
+            int step1 = (numRows - row - 1) * 2 == 0 ? row * 2 : (numRows - row - 1) * 2;     
+            int step2 = row * 2 == 0 ? step1 : row * 2;          
+            boolean isS1 = true;         
+            while(pos < chars.length) {      
+                sb.append(chars[pos]);       
+                if(isS1){                    
+                    pos += step1;                 
+                    isS1 = false;           
+                }else {              
+                    pos += step2;         
+                    isS1 = true;           
+                }           
+            }           
+            row++;        
+        }
+        return sb.toString();    
+    }
+}
 ```
 
 #### 解法二：Z字存储
@@ -553,7 +788,31 @@ class Solution {    public String convert(String s, int numRows) {        if(num
 按照写 Z 的过程，遍历每个字符，然后将字符存到对应的行中。用upNotDown表示当前进行方向，如果为false代表要往下写，所以row要加一；如果为true，row要减一。
 
 ```java
-class Solution {    public String convert(String s, int numRows) {        if(numRows == 1 || s.length() <= numRows) return s;        char[] chars = s.toCharArray();        List<StringBuilder> rows = new ArrayList<StringBuilder>();        boolean upNotDown = false;        int row = 0;        for(int i = 0; i < numRows; i++) {            rows.add(new StringBuilder());        }        for(char c : chars) {            rows.get(row).append(c);                        if(upNotDown) {                row--;                if(row == 0) upNotDown = false;            }else {                row++;                if(row == numRows - 1) upNotDown = true;            }        }        StringBuilder sb = new StringBuilder();        for (StringBuilder r : rows) sb.append(r);                return sb.toString();    }}
+class Solution {    
+    public String convert(String s, int numRows) {    
+        if(numRows == 1 || s.length() <= numRows) return s;     
+        char[] chars = s.toCharArray();      
+        List<StringBuilder> rows = new ArrayList<StringBuilder>();      
+        boolean upNotDown = false;        
+        int row = 0;      
+        for(int i = 0; i < numRows; i++) {         
+            rows.add(new StringBuilder());      
+        }       
+        for(char c : chars) {       
+            rows.get(row).append(c);        
+            if(upNotDown) {             
+                row--;             
+                if(row == 0) upNotDown = false;        
+            }else {            
+                row++;               
+                if(row == numRows - 1) upNotDown = true;           
+            }
+        }        
+        StringBuilder sb = new StringBuilder();      
+        for (StringBuilder r : rows) sb.append(r);     
+        return sb.toString();   
+    }
+}
 ```
 
 ### 7.  整数反转
@@ -726,10 +985,39 @@ class Solution {
 本题要尤其注意测试样例 “  +4” 、“+-12”、"00000-42a1234"。这代表除了‘-’，'+‘也要考虑，且一旦前面出现了有效的字符后面再出现除数字以外的任何字符都是不作数的。
 
 ```java
-class Solution {    public int myAtoi(String s) {        if(s.length() == 0) return 0;        char[] chars = s.toCharArray();        long res = 0; //结果用long防止溢出        boolean negative = false; //表示是否为负数        boolean hasMet = false; //表示之前已经遇到了有效字符        for(char c : chars) {            if(!hasMet && c == '-' && res == 0) {                negative = true;                hasMet = true;            }else if(!hasMet && c == '+' && res == 0){                negative = false;                hasMet = true;            }else if(!hasMet && c == ' ' && res == 0){                continue;            }else{                            int cur = c - 48;                if(cur >= 0 && cur <= 9){                     hasMet = true;                                       res = res * 10 + cur;                }else {                    break;                }                if(negative && res > 2147483648L) return -2147483648;                if(!negative && res >= 2147483648L) return 2147483647;            }        }        if(negative) res = -res;                return (int)res;    }}
+class Solution {    
+    public int myAtoi(String s) {     
+        if(s.length() == 0) return 0;       
+        char[] chars = s.toCharArray();     
+        long res = 0; //结果用long防止溢出      
+        boolean negative = false; //表示是否为负数     
+        boolean hasMet = false; //表示之前已经遇到了有效字符      
+        for(char c : chars) {           
+            if(!hasMet && c == '-' && res == 0) {       
+                negative = true;              
+                hasMet = true;          
+            }else if(!hasMet && c == '+' && res == 0){         
+                negative = false;          
+                hasMet = true;        
+            }else if(!hasMet && c == ' ' && res == 0){         
+                continue;      
+            }else{            
+                int cur = c - 48;           
+                if(cur >= 0 && cur <= 9){   
+                    hasMet = true;                 
+                    res = res * 10 + cur;          
+                }else {                   
+                    break;             
+                }               
+                if(negative && res > 2147483648L) return -2147483648;         
+                if(!negative && res >= 2147483648L) return 2147483647;        
+            }       
+        }      
+        if(negative) res = -res;         
+        return (int)res;   
+    }
+}
 ```
-
-
 
 ### 9. 回文数
 
